@@ -1,11 +1,41 @@
 Package: schextra
-Title: What the Package Does (One Line, Title Case)
+Type: Package
+Title: schextra
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Authors@R: c(
+    person(
+        "Stephanie",
+        "Gipson",
+        role = "aut"
+        ),
+    person(
+        "Abbigayl",
+        "Burtis",
+        role = "aut"
+        ),
+    person(
+        "Nathaly",
+        "Limon de la Rosa",
+        role = "aut"
+        ),
+    person(
+        "Austin", 
+        "Gillen", 
+        email = "austin.gillen@cuanschutz.edu",
+        role = c("aut", "cre")
+        )
+    )
+Description: SCUBA-based hexbin plotting for single-cell sequencing data,
+    based on schex.
+License: use_gpl3_license()
+Imports:
+    ggplot2,
+    hexbin,
+    dplyr,
+    rlang,
+    SCUBA
+Remotes: 
+    github::amc-heme/SCUBA
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

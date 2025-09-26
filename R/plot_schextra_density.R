@@ -1,42 +1,32 @@
 #' Plot of density of observations from single cell data
 #'    in bivariate hexagon cells.
 #'
-#' @param sce A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.
+#' @param obj A SCUBA-supported single-cell object.
+#' @param nbins The number of bins partitioning the range of the first
+#'    component of the chosen dimension reduction.
+#' @param dimension_reduction A string indicating the reduced dimension
+#'    result to calculate hexagon cell representation of.
+#' @param use_dims A vector of two integers specifying the dimensions used.
 #' @param title A string containing the title of the plot.
 #' @param xlab A string containing the title of the x axis.
 #' @param ylab A string containing the title of the y axis.
 #'
 #' @return A \code{\link{ggplot2}{ggplot}} object.
-#' @import SingleCellExperiment
 #' @import ggplot2
 #' @importFrom dplyr as_tibble
 #' @import rlang
 #' @export
-#'
-#' @examples
-#' # For SingleCellExperiment object
-#' library(TENxPBMCData)
-#' library(scater)
-#' tenx_pbmc3k <- TENxPBMCData(dataset = "pbmc3k")
-#' rm_ind <- calculateAverage(tenx_pbmc3k) < 0.1
-#' tenx_pbmc3k <- tenx_pbmc3k[!rm_ind, ]
-#' tenx_pbmc3k <- logNormCounts(tenx_pbmc3k)
-#' tenx_pbmc3k <- runPCA(tenx_pbmc3k)
-#' tenx_pbmc3k <- make_hexbin(tenx_pbmc3k, 10, dimension_reduction = "PCA")
-#' plot_hexbin_density(tenx_pbmc3k)
-plot_hexbin_density <- function(
-    sce,
+#' 
+plot_schextra_density <- function(
+    obj,
+    nbins = 80,
+    dimension_reduction = "UMAP",
+    use_dims = c(1,2),
     title = NULL,
     xlab = NULL,
     ylab = NULL) {
-    out <- .extract_hexbin(sce)
-    .plot_hexbin_density_helper(out, title, xlab, ylab)
-}
-
-.plot_hexbin_density_helper <- function(out, title, xlab, ylab) {
-    if (is.null(out)) {
-        stop("Compute hexbin representation before plotting.")
-    }
+  
+    out <- .schextra_bin(obj, nbins, dimension_reduction, use_dims)
 
     if (is.null(title)) {
         title <- "Density"
@@ -50,7 +40,7 @@ plot_hexbin_density <- function(
         ylab <- "y"
     }
 
-    out <- as_tibble(out)
+    out <- as_tibble(out[[2]])
 
     ggplot(out, aes(x = !!sym("x"), y = !!sym("y"), fill = !!sym("number_of_cells"))) +
         geom_hex(stat = "identity") +
