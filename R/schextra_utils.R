@@ -1,12 +1,11 @@
 #' Bivariate binning of single cell data into hexagon cells.
 #'
-#' \code{make_hexbin} returns a
-#'    \code{\link[SingleCellExperiment]{SingleCellExperiment}} object of binned hexagon cells.
+#' \code{.schextra_bin} returns an schex-style binning list.
 #'
-#' @param sce A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.
+#' @param obj A SCUBA-supported single-cell object.
 #' @param nbins The number of bins partitioning the range of the first
 #'    component of the chosen dimension reduction.
-#' @param dimension_reduction A string indicating the reduced dimension
+#' @param dr A string indicating the reduced dimension
 #'    result to calculate hexagon cell representation of.
 #' @param use_dims A vector of two integers specifying the dimensions used.
 #'
