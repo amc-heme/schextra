@@ -10,6 +10,10 @@ plot_schextra_density(
   nbins = 80,
   dimension_reduction = "UMAP",
   use_dims = c(1, 2),
+  split_by = NULL,
+  scale_density = FALSE,
+  ncol = NULL,
+  scales = "fixed",
   title = NULL,
   xlab = NULL,
   ylab = NULL
@@ -26,6 +30,28 @@ result to calculate hexagon cell representation of.}
 
 \item{use_dims}{A vector of two integers specifying the dimensions used.}
 
+\item{split_by}{A string naming a metadata variable to split the plot by.
+If NULL (default), no splitting is performed. When provided, creates
+separate faceted plots for each unique value in the metadata variable.
+Each facet displays the same set of hexagonal bins with cell counts
+calculated separately for that metadata group. Bins with zero cells
+for a particular group are excluded from that group's facet.
+NA values in the metadata will be shown in a separate facet.}
+
+\item{scale_density}{Logical. If TRUE and split_by is used, each facet
+will have an independent color scale showing relative density within that
+group (rescaled 0-1). If FALSE (default), all facets share a single color
+scale showing absolute cell counts. This allows better visualization of
+density patterns in groups with different cell numbers. Only applies when
+split_by is used; ignored otherwise.}
+
+\item{ncol}{Number of columns for facet layout when split_by is used.
+If NULL (default), ggplot2 determines the layout automatically.}
+
+\item{scales}{Should scales be "fixed" (default, same for all facets),
+"free" (vary across facets), "free_x", or "free_y"? Only applies
+when split_by is used.}
+
 \item{title}{A string containing the title of the plot.}
 
 \item{xlab}{A string containing the title of the x axis.}
@@ -38,4 +64,27 @@ A \code{\link{ggplot2}{ggplot}} object.
 \description{
 Plot of density of observations from single cell data
 in bivariate hexagon cells.
+}
+\examples{
+\dontrun{
+# Basic density plot
+plot_schextra_density(seurat_obj, nbins = 80)
+
+# Split by cell type with automatic layout
+plot_schextra_density(seurat_obj, nbins = 80, split_by = "cell_type")
+
+# Control layout with 2 columns
+plot_schextra_density(seurat_obj, split_by = "treatment", ncol = 2)
+
+# Free y-axis scales for better contrast per group
+plot_schextra_density(seurat_obj, split_by = "sample", scales = "free_y")
+
+# Use independent color scales per facet for better contrast
+plot_schextra_density(seurat_obj, split_by = "cell_type", scale_density = TRUE)
+
+# Combine independent density scaling with free position scales
+plot_schextra_density(seurat_obj, split_by = "treatment", 
+                      scale_density = TRUE, scales = "free_y", ncol = 2)
+}
+
 }
