@@ -16,6 +16,8 @@ plot_schextra_feature(
   split_by = NULL,
   ncol = NULL,
   scales = "fixed",
+  min_cutoff = NULL,
+  max_cutoff = NULL,
   title = NULL,
   xlab = NULL,
   ylab = NULL
@@ -59,6 +61,17 @@ If NULL (default), ggplot2 determines the layout automatically.}
 "free" (vary across facets), "free_x", or "free_y"? Only applies
 when split_by is used.}
 
+\item{min_cutoff}{Minimum cutoff value for feature expression display.
+Can be a numeric value (e.g., 0.5) or a quantile string (e.g., "q10" for
+10th percentile). Values below this threshold will be capped at the cutoff.
+If NULL (default), no minimum cutoff is applied.}
+
+\item{max_cutoff}{Maximum cutoff value for feature expression display.
+Can be a numeric value (e.g., 3) or a quantile string (e.g., "q95" for
+95th percentile). Values above this threshold will be capped at the cutoff.
+If NULL (default), no maximum cutoff is applied. When split_by is used,
+cutoffs are calculated globally across all groups.}
+
 \item{title}{A string containing the title of the plot. If NULL, defaults
 to "Feature (action)".}
 
@@ -97,5 +110,19 @@ plot_schextra_feature(seurat_obj, feature = "CD8A", split_by = "cell_type")
 # Custom layout and scales
 plot_schextra_feature(seurat_obj, feature = "CD8A",
                       split_by = "treatment", ncol = 2, scales = "free_y")
+
+# Cap maximum expression at 95th percentile
+plot_schextra_feature(seurat_obj, feature = "CD8A", max_cutoff = "q95")
+
+# Cap maximum at fixed value of 3
+plot_schextra_feature(seurat_obj, feature = "CD8A", max_cutoff = 3)
+
+# Apply both min and max cutoffs
+plot_schextra_feature(seurat_obj, feature = "CD8A", 
+                      min_cutoff = "q10", max_cutoff = "q90")
+
+# Cutoffs work with split_by (applied globally)
+plot_schextra_feature(seurat_obj, feature = "CD8A", 
+                      split_by = "cell_type", max_cutoff = "q95")
 }
 }

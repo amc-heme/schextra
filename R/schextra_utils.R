@@ -138,6 +138,61 @@
     return(result)
 }
 
+#' Apply minimum and maximum cutoffs to feature values
+#'
+#' Caps feature values at specified minimum and maximum thresholds.
+#' Supports both numeric cutoffs and quantile-based cutoffs (e.g., "q95").
+#' When both cutoffs are provided, minimum cutoff is applied first, then
+#' maximum cutoff.
+#'
+#' @param values Numeric vector of feature values
+#' @param min_cutoff Minimum cutoff: NULL (no cutoff), numeric value, or
+#'    quantile string "q##" where ## is 0-100 (e.g., "q5" for 5th percentile)
+#' @param max_cutoff Maximum cutoff: NULL (no cutoff), numeric value, or
+#'    quantile string "q##" where ## is 0-100 (e.g., "q95" for 95th percentile)
+#'
+#' @return Numeric vector with cutoffs applied
+#' @importFrom stats quantile
+#' @keywords internal
+
+.apply_cutoffs <- function(values, min_cutoff = NULL, max_cutoff = NULL) {
+    result <- values
+    
+    # Apply minimum cutoff
+    if (!is.null(min_cutoff)) {
+        if (is.character(min_cutoff) && grepl("^q[0-9]+$", min_cutoff)) {
+            percentile <- as.numeric(sub("^q", "", min_cutoff))
+            if (percentile < 0 || percentile > 100) {
+                stop("min_cutoff quantile must be between 0 and 100 (e.g., 'q5')")
+            }
+            cutoff_value <- quantile(values, probs = percentile / 100, na.rm = TRUE)
+        } else if (is.numeric(min_cutoff)) {
+            cutoff_value <- min_cutoff
+        } else {
+            stop("min_cutoff must be NULL, a numeric value, or a quantile string (e.g., 'q5')")
+        }
+        result <- pmax(result, cutoff_value, na.rm = TRUE)
+    }
+    
+    # Apply maximum cutoff
+    if (!is.null(max_cutoff)) {
+        if (is.character(max_cutoff) && grepl("^q[0-9]+$", max_cutoff)) {
+            percentile <- as.numeric(sub("^q", "", max_cutoff))
+            if (percentile < 0 || percentile > 100) {
+                stop("max_cutoff quantile must be between 0 and 100 (e.g., 'q95')")
+            }
+            cutoff_value <- quantile(values, probs = percentile / 100, na.rm = TRUE)
+        } else if (is.numeric(max_cutoff)) {
+            cutoff_value <- max_cutoff
+        } else {
+            stop("max_cutoff must be NULL, a numeric value, or a quantile string (e.g., 'q95')")
+        }
+        result <- pmin(result, cutoff_value, na.rm = TRUE)
+    }
+    
+    return(result)
+}
+
 #' Aggregate feature expression values within hexagonal bins
 #'
 #' Calculates aggregated feature expression for each hexagonal bin using

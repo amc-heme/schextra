@@ -32,6 +32,15 @@
 #' @param scales Should scales be "fixed" (default, same for all facets),
 #'    "free" (vary across facets), "free_x", or "free_y"? Only applies
 #'    when split_by is used.
+#' @param min_cutoff Minimum cutoff value for feature expression display.
+#'    Can be a numeric value (e.g., 0.5) or a quantile string (e.g., "q10" for
+#'    10th percentile). Values below this threshold will be capped at the cutoff.
+#'    If NULL (default), no minimum cutoff is applied.
+#' @param max_cutoff Maximum cutoff value for feature expression display.
+#'    Can be a numeric value (e.g., 3) or a quantile string (e.g., "q95" for
+#'    95th percentile). Values above this threshold will be capped at the cutoff.
+#'    If NULL (default), no maximum cutoff is applied. When split_by is used,
+#'    cutoffs are calculated globally across all groups.
 #' @param title A string containing the title of the plot. If NULL, defaults
 #'    to "Feature (action)".
 #' @param xlab A string containing the title of the x axis.
@@ -66,6 +75,20 @@
 #' # Custom layout and scales
 #' plot_schextra_feature(seurat_obj, feature = "CD8A",
 #'                       split_by = "treatment", ncol = 2, scales = "free_y")
+#'
+#' # Cap maximum expression at 95th percentile
+#' plot_schextra_feature(seurat_obj, feature = "CD8A", max_cutoff = "q95")
+#'
+#' # Cap maximum at fixed value of 3
+#' plot_schextra_feature(seurat_obj, feature = "CD8A", max_cutoff = 3)
+#'
+#' # Apply both min and max cutoffs
+#' plot_schextra_feature(seurat_obj, feature = "CD8A", 
+#'                       min_cutoff = "q10", max_cutoff = "q90")
+#'
+#' # Cutoffs work with split_by (applied globally)
+#' plot_schextra_feature(seurat_obj, feature = "CD8A", 
+#'                       split_by = "cell_type", max_cutoff = "q95")
 #' }
 
 plot_schextra_feature <- function(
@@ -80,6 +103,8 @@ plot_schextra_feature <- function(
     split_by = NULL,
     ncol = NULL,
     scales = "fixed",
+    min_cutoff = NULL,
+    max_cutoff = NULL,
     title = NULL,
     xlab = NULL,
     ylab = NULL) {
@@ -183,6 +208,9 @@ plot_schextra_feature <- function(
             dimension_reduction,
             use_dims
         )
+        
+        # Apply cutoffs globally across all groups
+        out_df$feature_value <- .apply_cutoffs(out_df$feature_value, min_cutoff, max_cutoff)
     } else {
         # No splitting workflow: aggregate feature per bin
         aggregated_values <- .calculate_feature_per_bin(feature_values, out$cID, action)
@@ -191,6 +219,9 @@ plot_schextra_feature <- function(
         # The aggregated_values are in the same order as the bins in hexbin_matrix
         out_df <- as_tibble(out[[2]])
         out_df$feature_value <- aggregated_values
+        
+        # Apply cutoffs
+        out_df$feature_value <- .apply_cutoffs(out_df$feature_value, min_cutoff, max_cutoff)
     }
     
     # Create ggplot
