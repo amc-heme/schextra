@@ -7,22 +7,26 @@
 .schextra_bin(obj, nbins, dr, use_dims)
 }
 \arguments{
+\item{obj}{A SCUBA-supported single-cell object.}
+
 \item{nbins}{The number of bins partitioning the range of the first
 component of the chosen dimension reduction.}
 
-\item{use_dims}{A vector of two integers specifying the dimensions used.}
-
-\item{sce}{A \code{\link[SingleCellExperiment]{SingleCellExperiment}} object.}
-
-\item{dimension_reduction}{A string indicating the reduced dimension
+\item{dr}{A string indicating the reduced dimension
 result to calculate hexagon cell representation of.}
+
+\item{use_dims}{A vector of two integers specifying the dimensions used.}
 }
 \value{
-A schex-style binning list.
+A schex-style binning list with components:
+\describe{
+\item{cID}{Vector of bin assignments for each cell}
+\item{hexbin.matrix}{Matrix with x, y coordinates and cell counts}
+\item{cell}{Vector of unique bin IDs (for mapping to matrix rows)}
+}
 }
 \description{
-\code{make_hexbin} returns a
-\code{\link[SingleCellExperiment]{SingleCellExperiment}} object of binned hexagon cells.
+\code{.schextra_bin} returns an schex-style binning list.
 }
 \details{
 ...
