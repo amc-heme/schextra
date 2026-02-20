@@ -33,7 +33,8 @@ Imports:
     hexbin,
     dplyr,
     rlang,
-    SCUBA
+    SCUBA,
+    cowplot
 Remotes: 
     github::amc-heme/SCUBA
 Encoding: UTF-8

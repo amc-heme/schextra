@@ -43,8 +43,10 @@
 #'    cutoffs are calculated globally across all groups.
 #' @param title A string containing the title of the plot. If NULL, defaults
 #'    to "Feature (action)".
-#' @param xlab A string containing the title of the x axis.
-#' @param ylab A string containing the title of the y axis.
+#' @param xlab A string containing the title of the x axis. If NULL (default),
+#'    uses the proper dimension name from the reduction (e.g., "UMAP_1", "PC_1").
+#' @param ylab A string containing the title of the y axis. If NULL (default),
+#'    uses the proper dimension name from the reduction (e.g., "UMAP_2", "PC_2").
 #'
 #' @return A \code{\link{ggplot2}{ggplot}} object.
 #'
@@ -53,6 +55,7 @@
 #' @import rlang
 #' @import SCUBA
 #' @importFrom dplyr as_tibble
+#' @importFrom cowplot theme_cowplot
 #'
 #' @examples
 #' \dontrun{
@@ -181,17 +184,24 @@ plot_schextra_feature <- function(
         ))
     }
     
+    # Get proper dimension names from SCUBA
+    dim_names <- reduction_dimnames(
+        object = obj,
+        reduction = dimension_reduction,
+        dims = use_dims
+    )
+    
     # Set plot defaults
     if (is.null(title)) {
         title <- paste0(feature, " (", action, ")")
     }
     
     if (is.null(xlab)) {
-        xlab <- "x"
+        xlab <- dim_names[1]
     }
     
     if (is.null(ylab)) {
-        ylab <- "y"
+        ylab <- dim_names[2]
     }
     
     # Handle splitting logic
@@ -224,12 +234,16 @@ plot_schextra_feature <- function(
         out_df$feature_value <- .apply_cutoffs(out_df$feature_value, min_cutoff, max_cutoff)
     }
     
-    # Create ggplot
+    # Create ggplot with Seurat-style theme
     p <- ggplot(out_df, aes(x = !!sym("x"), y = !!sym("y"), fill = !!sym("feature_value"))) +
         geom_hex(stat = "identity") +
         scale_fill_viridis_c() +
-        theme_classic() +
-        theme(legend.position = "bottom") +
+        theme_cowplot(font_size = 14) +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold")
+        ) +
         labs(fill = feature, x = xlab, y = ylab) +
         ggtitle(title)
     

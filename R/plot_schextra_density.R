@@ -26,14 +26,17 @@
 #'    "free" (vary across facets), "free_x", or "free_y"? Only applies
 #'    when split_by is used.
 #' @param title A string containing the title of the plot.
-#' @param xlab A string containing the title of the x axis.
-#' @param ylab A string containing the title of the y axis.
+#' @param xlab A string containing the title of the x axis. If NULL (default),
+#'    uses the proper dimension name from the reduction (e.g., "UMAP_1", "PC_1").
+#' @param ylab A string containing the title of the y axis. If NULL (default),
+#'    uses the proper dimension name from the reduction (e.g., "UMAP_2", "PC_2").
 #'
 #' @return A \code{\link{ggplot2}{ggplot}} object.
 #' @import ggplot2
 #' @importFrom dplyr as_tibble group_by mutate ungroup if_else select %>%
 #' @import rlang
 #' @import SCUBA
+#' @importFrom cowplot theme_cowplot
 #' @export
 #'
 #' @examples
@@ -113,16 +116,23 @@ plot_schextra_density <- function(
   
     out <- .schextra_bin(obj, nbins, dimension_reduction, use_dims)
 
+    # Get proper dimension names from SCUBA
+    dim_names <- reduction_dimnames(
+        object = obj,
+        reduction = dimension_reduction,
+        dims = use_dims
+    )
+
     if (is.null(title)) {
         title <- "Density"
     }
 
     if (is.null(xlab)) {
-        xlab <- "x"
+        xlab <- dim_names[1]
     }
 
     if (is.null(ylab)) {
-        ylab <- "y"
+        ylab <- dim_names[2]
     }
 
     # Add split metadata if requested
@@ -169,12 +179,16 @@ plot_schextra_density <- function(
         legend_label <- NULL  # Will use default (no title with element_blank())
     }
 
-    # Create base plot
+    # Create base plot with Seurat-style theme
     p <- ggplot(out_df, aes(x = !!sym("x"), y = !!sym("y"), fill = !!sym(fill_var))) +
         geom_hex(stat = "identity") +
         scale_fill_viridis_c() +
-        theme_classic() +
-        theme(legend.position = "bottom") +
+        theme_cowplot(font_size = 14) +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold")
+        ) +
         ggtitle(title) +
         labs(x = xlab, y = ylab)
     

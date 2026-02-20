@@ -54,9 +54,11 @@ when split_by is used.}
 
 \item{title}{A string containing the title of the plot.}
 
-\item{xlab}{A string containing the title of the x axis.}
+\item{xlab}{A string containing the title of the x axis. If NULL (default),
+uses the proper dimension name from the reduction (e.g., "UMAP_1", "PC_1").}
 
-\item{ylab}{A string containing the title of the y axis.}
+\item{ylab}{A string containing the title of the y axis. If NULL (default),
+uses the proper dimension name from the reduction (e.g., "UMAP_2", "PC_2").}
 }
 \value{
 A \code{\link{ggplot2}{ggplot}} object.
