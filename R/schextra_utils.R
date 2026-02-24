@@ -85,8 +85,21 @@
     # Match metadata to cells in the order they appear in the reduction
     cell_metadata_ordered <- cell_metadata[cell_ids]
     
-    # Convert NAs to "NA" string for proper faceting
-    cell_metadata_ordered[is.na(cell_metadata_ordered)] <- "NA"
+    # Store original factor levels if this is a factor (for restoration later)
+    is_factor <- is.factor(cell_metadata_ordered)
+    if (is_factor) {
+        original_levels <- levels(cell_metadata_ordered)
+    }
+    
+    # Convert NAs to "NA" string for proper faceting (only if NAs actually exist)
+    has_na <- any(is.na(cell_metadata_ordered))
+    if (has_na) {
+        if (is_factor) {
+            levels(cell_metadata_ordered) <- c(levels(cell_metadata_ordered), "NA")
+            original_levels <- levels(cell_metadata_ordered)  # Update stored levels
+        }
+        cell_metadata_ordered[is.na(cell_metadata_ordered)] <- "NA"
+    }
     
     # Get unique bins that have at least one cell
     unique_bins <- unique(cID)
@@ -106,8 +119,9 @@
         # Get metadata values for cells in this bin
         meta_values <- cell_metadata_ordered[cells_in_bin]
         
-        # Count cells per group in this bin
-        group_counts <- table(meta_values)
+        # Get unique groups in this bin (only groups actually present)
+        # Note: Using unique() instead of table() to avoid including unused factor levels
+        unique_groups <- unique(meta_values)
         
         # Get row index for this bin ID
         row_idx <- bin_id_to_row[as.character(bin_num)]
@@ -117,12 +131,15 @@
         bin_y <- hexbin_matrix[row_idx, "y"]
         
         # Create one row per group that has cells in this bin
-        for (group in names(group_counts)) {
+        for (group in unique_groups) {
+            # Count cells for this specific group in this bin
+            group_count <- sum(meta_values == group)
+            
             expanded_rows[[row_index]] <- data.frame(
                 x = bin_x,
                 y = bin_y,
-                number_of_cells = as.numeric(group_counts[group]),
-                metadata_group = group,
+                number_of_cells = group_count,
+                metadata_group = as.character(group),  # Convert to character to avoid factor level issues
                 stringsAsFactors = FALSE
             )
             row_index <- row_index + 1
@@ -134,6 +151,11 @@
     
     # Rename the metadata column to the actual variable name
     colnames(result)[colnames(result) == "metadata_group"] <- metadata_var
+    
+    # Restore factor type with original levels if input was a factor
+    if (is_factor) {
+        result[[metadata_var]] <- factor(result[[metadata_var]], levels = original_levels)
+    }
     
     return(result)
 }
@@ -270,8 +292,21 @@
     # Match metadata to cells in the order they appear in the reduction
     cell_metadata_ordered <- cell_metadata[cell_ids]
     
-    # Convert NAs to "NA" string for proper faceting
-    cell_metadata_ordered[is.na(cell_metadata_ordered)] <- "NA"
+    # Store original factor levels if this is a factor (for restoration later)
+    is_factor <- is.factor(cell_metadata_ordered)
+    if (is_factor) {
+        original_levels <- levels(cell_metadata_ordered)
+    }
+    
+    # Convert NAs to "NA" string for proper faceting (only if NAs actually exist)
+    has_na <- any(is.na(cell_metadata_ordered))
+    if (has_na) {
+        if (is_factor) {
+            levels(cell_metadata_ordered) <- c(levels(cell_metadata_ordered), "NA")
+            original_levels <- levels(cell_metadata_ordered)  # Update stored levels
+        }
+        cell_metadata_ordered[is.na(cell_metadata_ordered)] <- "NA"
+    }
     
     # Get unique bins that have at least one cell
     unique_bins <- unique(cID)
@@ -323,7 +358,7 @@
                 x = bin_x,
                 y = bin_y,
                 feature_value = agg_value,
-                metadata_group = group,
+                metadata_group = as.character(group),  # Convert to character to avoid factor level issues
                 stringsAsFactors = FALSE
             )
             row_index <- row_index + 1
@@ -335,6 +370,11 @@
     
     # Rename the metadata column to the actual variable name
     colnames(result)[colnames(result) == "metadata_group"] <- metadata_var
+    
+    # Restore factor type with original levels if input was a factor
+    if (is_factor) {
+        result[[metadata_var]] <- factor(result[[metadata_var]], levels = original_levels)
+    }
     
     return(result)
 }
