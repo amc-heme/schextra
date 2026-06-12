@@ -189,7 +189,7 @@ plot_schextra_feature <- function(
     if (is_keyed) {
         # Keyed name: unambiguous; route directly (independent of `assay`).
         expr_data <- tryCatch({
-            fetch_feature(obj, features = feature, assay = assay, layer = layer)
+            fetch_feature(obj, features = feature, assay = NULL, layer = layer)
         }, error = function(feature_error) {
             stop(sprintf(
                 "Failed to retrieve feature '%s': %s",
