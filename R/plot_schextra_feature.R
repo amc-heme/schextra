@@ -153,19 +153,115 @@ plot_schextra_feature <- function(
     #   - Features as COLUMNS (one column per feature)
     # This is different from traditional expression matrices where features are rows!
     
-    # Get feature expression data using SCUBA
-    expr_data <- tryCatch({
-        fetch_feature(obj, features = feature, assay = assay, layer = layer)
-    }, error = function(e) {
-        stop(sprintf("Failed to retrieve feature '%s': %s", feature, e$message))
-    })
-    
-    # Extract feature expression as numeric vector (fetch_feature returns data.frame: cells as rows, features as columns)
-    if (ncol(expr_data) == 0 || !(feature %in% colnames(expr_data))) {
+    # Resolve the feature to expression values. Resolution semantics:
+    #   - Keyed names (e.g. "rna_ACTG1") are unambiguous and route directly
+    #     to the named assay.
+    #   - When `assay` is supplied, only that assay is searched: a bare name
+    #     is keyed to force assay-only resolution (bypassing SCUBA's
+    #     metadata-first behavior for bare names). A name that is not in that
+    #     assay errors -- it is NOT resolved from metadata.
+    #   - When `assay` is NULL, resolution is metadata-first then assay
+    #     (SCUBA's default for bare names), with a metadata fallback for
+    #     names that fetch_feature cannot route to an assay at all.
+    # NOTE: fetch_feature() returns a data.frame with cells as ROWS and the
+    # feature as a single COLUMN. The returned column name may be keyed
+    # (e.g. "rna_ACTG1"), so values are extracted from the returned column
+    # rather than by the user-supplied `feature` string.
+
+    # Assay key prefixes (named: assay -> key). Empty if unavailable
+    # (e.g. non-Seurat objects), in which case behavior degrades to passing
+    # the bare name through to fetch_feature.
+    assay_keys <- tryCatch(
+        SCUBA::all_keys(obj),
+        error = function(e) character(0)
+    )
+
+    # Is the user-supplied name already keyed for some assay?
+    is_keyed <- length(assay_keys) > 0 &&
+        any(vapply(
+            assay_keys,
+            function(k) nzchar(k) && startsWith(feature, k),
+            logical(1)
+        ))
+
+    expr_data <- NULL
+
+    if (is_keyed) {
+        # Keyed name: unambiguous; route directly (independent of `assay`).
+        expr_data <- tryCatch({
+            fetch_feature(obj, features = feature, assay = NULL, layer = layer)
+        }, error = function(feature_error) {
+            stop(sprintf(
+                "Failed to retrieve feature '%s': %s",
+                feature, conditionMessage(feature_error)
+            ))
+        })
+    } else if (!is.null(assay)) {
+        # Assay supplied + bare name: search ONLY that assay. Key the name to
+        # bypass SCUBA's metadata-first resolution of bare names.
+        key <- if (assay %in% names(assay_keys)) assay_keys[[assay]] else ""
+        lookup <- if (nzchar(key)) paste0(key, feature) else feature
+        expr_data <- tryCatch({
+            fetch_feature(obj, features = lookup, assay = assay, layer = layer)
+        }, error = function(feature_error) {
+            # Strict assay-only: do NOT fall back to metadata.
+            stop(sprintf(
+                "Feature '%s' not found in assay '%s'.", feature, assay
+            ))
+        })
+        if (is.null(expr_data) || ncol(expr_data) == 0) {
+            stop(sprintf(
+                "Feature '%s' not found in assay '%s'.", feature, assay
+            ))
+        }
+    } else {
+        # No assay + bare name: metadata-first then assay (SCUBA default),
+        # with a metadata fallback when fetch_feature cannot route the name.
+        # This preserves the BPCells fast path for real assay features.
+        expr_data <- tryCatch({
+            fetch_feature(obj, features = feature, assay = assay, layer = layer)
+        }, error = function(feature_error) {
+            metadata_vars <- tryCatch(
+                SCUBA::meta_varnames(obj),
+                error = function(e) character(0)
+            )
+            if (feature %in% metadata_vars) {
+                SCUBA::fetch_metadata(obj, vars = feature)
+            } else {
+                stop(sprintf(
+                    "Failed to retrieve feature '%s': %s",
+                    feature, conditionMessage(feature_error)
+                ))
+            }
+        })
+        # fetch_feature may return a zero-column frame rather than erroring;
+        # attempt the metadata fallback before giving up.
+        if (is.null(expr_data) || ncol(expr_data) == 0) {
+            metadata_vars <- tryCatch(
+                SCUBA::meta_varnames(obj),
+                error = function(e) character(0)
+            )
+            if (feature %in% metadata_vars) {
+                expr_data <- SCUBA::fetch_metadata(obj, vars = feature)
+            }
+        }
+    }
+
+    # A single feature is requested, so expression lives in one column. The
+    # returned column name may be keyed (e.g. "rna_ACTG1"); extract by column
+    # rather than by the user-supplied `feature`.
+    if (is.null(expr_data) || ncol(expr_data) == 0) {
         stop(sprintf("Feature '%s' not found in the specified assay", feature))
     }
-    
-    feature_values <- as.numeric(expr_data[[feature]])
+
+    raw_feature_values <- expr_data[[1]]
+    if (!is.numeric(raw_feature_values) && !is.integer(raw_feature_values)) {
+        stop(sprintf(
+            "Feature '%s' resolved to non-numeric values (class: %s). Only numeric features/metadata can be plotted.",
+            feature, paste(class(raw_feature_values), collapse = "/")
+        ))
+    }
+    feature_values <- as.numeric(raw_feature_values)
     
     # Validate feature_values length before proceeding
     if (length(feature_values) == 0) {
