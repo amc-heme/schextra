@@ -155,14 +155,41 @@ plot_schextra_feature <- function(
     
     # Get feature expression data using SCUBA
     expr_data <- tryCatch({
+        # Primary path: assay features (incl. keyed names) and the
+        # BPCells-optimized direct-matrix path inside fetch_feature.
         fetch_feature(obj, features = feature, assay = assay, layer = layer)
-    }, error = function(e) {
-        stop(sprintf("Failed to retrieve feature '%s': %s", feature, e$message))
+    }, error = function(feature_error) {
+        # Fallback: the name may be a metadata variable (e.g. nCount_RNA),
+        # which fetch_feature cannot resolve because it only routes to assays.
+        metadata_vars <- tryCatch(
+            SCUBA::meta_varnames(obj),
+            error = function(e) character(0)
+        )
+        if (feature %in% metadata_vars) {
+            SCUBA::fetch_metadata(obj, vars = feature)
+        } else {
+            stop(sprintf(
+                "Failed to retrieve feature '%s': %s",
+                feature, conditionMessage(feature_error)
+            ))
+        }
     })
     
     # Extract feature expression as numeric vector (fetch_feature returns data.frame: cells as rows, features as columns)
     if (ncol(expr_data) == 0 || !(feature %in% colnames(expr_data))) {
-        stop(sprintf("Feature '%s' not found in the specified assay", feature))
+        # fetch_feature may return successfully with an empty/zero-column
+        # frame rather than erroring; attempt the metadata fallback before
+        # giving up.
+        metadata_vars <- tryCatch(
+            SCUBA::meta_varnames(obj),
+            error = function(e) character(0)
+        )
+        if (feature %in% metadata_vars) {
+            expr_data <- SCUBA::fetch_metadata(obj, vars = feature)
+        }
+        if (ncol(expr_data) == 0 || !(feature %in% colnames(expr_data))) {
+            stop(sprintf("Feature '%s' not found in the specified assay", feature))
+        }
     }
     
     feature_values <- as.numeric(expr_data[[feature]])
