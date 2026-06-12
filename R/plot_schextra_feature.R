@@ -254,7 +254,14 @@ plot_schextra_feature <- function(
         stop(sprintf("Feature '%s' not found in the specified assay", feature))
     }
 
-    feature_values <- as.numeric(expr_data[[1]])
+    raw_feature_values <- expr_data[[1]]
+    if (!is.numeric(raw_feature_values) && !is.integer(raw_feature_values)) {
+        stop(sprintf(
+            "Feature '%s' resolved to non-numeric values (class: %s). Only numeric features/metadata can be plotted.",
+            feature, paste(class(raw_feature_values), collapse = "/")
+        ))
+    }
+    feature_values <- as.numeric(raw_feature_values)
     
     # Validate feature_values length before proceeding
     if (length(feature_values) == 0) {
