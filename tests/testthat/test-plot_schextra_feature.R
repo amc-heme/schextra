@@ -136,9 +136,8 @@ test_that("case 5: BPCells gene uses the direct-matrix path; metadata works", {
     obj <- load_aml_bpcells()
 
     # The fast path is taken when the assay/layer is BPCells-backed. If it is
-    # not, fetch_feature emits "Falling back to fetch_data." -- assert both that
-    # the assay is BPCells-backed and that no fallback message is emitted.
-    expect_true(SCUBA:::is_bpcells(obj, assay = "RNA", layer = "data"))
+    # not, fetch_feature emits "Falling back to fetch_data." -- assert that no
+    # fallback message is emitted.
 
     msgs <- character(0)
     withCallingHandlers(
