@@ -189,6 +189,104 @@ test_that("case 6: a nonexistent name errors with the existing message", {
             feature = "NOT_A_REAL_FEATURE_XYZ",
             dimension_reduction = "umap"
         ),
-        regexp = "Failed to retrieve feature|not found in the specified assay"
+        regexp = "Failed to retrieve feature|not found in the specified assay|not found in assay"
+    )
+})
+
+
+# ---------------------------------------------------------------------------
+# Resolution semantics under a gene/metadata name collision.
+#
+# We inject a metadata column named exactly like a real gene ("ACTG1") and
+# give it distinct, easily distinguishable values (1..N, one per cell). Real
+# ACTG1 expression in this object is small (~0-6), so a per-bin mean cleanly
+# separates the two sources:
+#   - metadata source -> bin means are large (tens to hundreds)
+#   - gene source     -> bin means are small (< 10)
+# ---------------------------------------------------------------------------
+
+make_collision_obj <- function() {
+    obj <- load_aml_seurat()
+    testthat::skip_if_not("ACTG1" %in% rownames(obj[["RNA"]]))
+    # Inject a metadata column colliding with the gene name.
+    obj@meta.data[["ACTG1"]] <- seq_len(ncol(obj))
+    obj
+}
+
+# Largest per-bin feature value in the plot; used to discriminate source.
+max_bin_value <- function(p) {
+    max(p$data$feature_value, na.rm = TRUE)
+}
+
+test_that("collision: assay supplied returns the GENE (assay-only)", {
+    obj <- make_collision_obj()
+
+    p <- plot_schextra_feature(
+        obj,
+        feature = "ACTG1",
+        assay = "RNA",
+        dimension_reduction = "umap"
+    )
+
+    expect_s3_class(p, "ggplot")
+    # Gene expression is small; injected metadata (1..N) would be large.
+    expect_lt(max_bin_value(p), 50)
+})
+
+test_that("collision: no assay returns METADATA (metadata-first default)", {
+    obj <- make_collision_obj()
+
+    # SCUBA emits a warning when a bare name collides with metadata and the
+    # default assay, telling the user to use the key for the gene. That
+    # warning is expected here (we are deliberately resolving the metadata).
+    suppressWarnings(
+        p <- plot_schextra_feature(
+            obj,
+            feature = "ACTG1",
+            dimension_reduction = "umap"
+        )
+    )
+
+    expect_s3_class(p, "ggplot")
+    # Metadata values are 1..N (N = number of cells), so per-bin means are
+    # far larger than any real ACTG1 expression.
+    expect_gt(max_bin_value(p), 50)
+})
+
+test_that("collision: keyed name returns the GENE with or without assay", {
+    obj <- make_collision_obj()
+
+    p_no_assay <- plot_schextra_feature(
+        obj,
+        feature = "rna_ACTG1",
+        dimension_reduction = "umap"
+    )
+    p_assay <- plot_schextra_feature(
+        obj,
+        feature = "rna_ACTG1",
+        assay = "RNA",
+        dimension_reduction = "umap"
+    )
+
+    expect_s3_class(p_no_assay, "ggplot")
+    expect_s3_class(p_assay, "ggplot")
+    expect_lt(max_bin_value(p_no_assay), 50)
+    expect_lt(max_bin_value(p_assay), 50)
+})
+
+test_that("collision: assay supplied + metadata-only name errors (strict)", {
+    obj <- make_collision_obj()
+
+    # nCount_RNA is metadata only (not an RNA gene); with assay = "RNA" the
+    # search is restricted to the assay and must error rather than resolve
+    # from metadata.
+    expect_error(
+        plot_schextra_feature(
+            obj,
+            feature = "nCount_RNA",
+            assay = "RNA",
+            dimension_reduction = "umap"
+        ),
+        regexp = "not found in assay"
     )
 })
