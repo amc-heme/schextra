@@ -27,7 +27,7 @@ Authors@R: c(
     )
 Description: SCUBA-based hexbin plotting for single-cell sequencing data,
     based on schex.
-License: use_gpl3_license()
+License: GPL-3
 Imports:
     ggplot2,
     hexbin,

@@ -1,0 +1,5 @@
+^\.github$
+^AGENTS\.md$
+^LICENSE$
+^\.DS_Store$
+^\.Rbuildignore$
