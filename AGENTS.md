@@ -1,8 +1,8 @@
-# Agent Guide for schextra Development
+# Agent Guide for hextant Development
 
 ## Package Overview
 
-**schextra** is an R package for SCUBA-based hexbin plotting of single-cell sequencing data, reimplementing functionality from the schex package. It creates hexagonal binning visualizations of dimension reduction results (e.g., UMAP, PCA) to efficiently display density and other features of single-cell datasets.
+**hextant** is an R package for SCUBA-based hexbin plotting of single-cell sequencing data, reimplementing functionality from the schex package. It creates hexagonal binning visualizations of dimension reduction results (e.g., UMAP, PCA) to efficiently display density and other features of single-cell datasets.
 
 **Key Dependencies:**
 - `SCUBA` - Single-cell data handling (GitHub: amc-heme/SCUBA)
@@ -36,7 +36,7 @@ devtools::load_all()
 R CMD build .
 
 # Check package (CRAN standards)
-R CMD check schextra_*.tar.gz
+R CMD check hextant_*.tar.gz
 
 # Install from source
 R CMD INSTALL .
@@ -54,7 +54,7 @@ devtools::install()
 # Load package and test interactively
 devtools::load_all()
 # Test with your own single-cell object
-plot_schextra_density(your_scuba_object, nbins = 80, dimension_reduction = "UMAP")
+plot_hextant_density(your_scuba_object, nbins = 80, dimension_reduction = "UMAP")
 ```
 
 ## Testing Setup & Commands
@@ -75,8 +75,7 @@ Test files must be named `test-*.R` in `tests/testthat/`:
 tests/
 ├── testthat.R
 └── testthat/
-    ├── test-plot_schextra_density.R
-    └── test-schextra_utils.R
+    └── test-plot_hextant_feature.R
 ```
 
 ### Running Tests
@@ -85,10 +84,10 @@ tests/
 devtools::test()
 
 # Run a single test file
-testthat::test_file("tests/testthat/test-plot_schextra_density.R")
+testthat::test_file("tests/testthat/test-plot_hextant_feature.R")
 
 # Run tests matching a pattern
-devtools::test(filter = "density")
+devtools::test(filter = "feature")
 
 # Run with detailed output
 devtools::test(reporter = "progress")
@@ -96,12 +95,12 @@ devtools::test(reporter = "progress")
 
 ### Example Test Structure for This Package
 ```r
-# tests/testthat/test-schextra_utils.R
-test_that(".schextra_bin returns correct structure", {
+# tests/testthat/test-hextant_utils.R
+test_that(".hextant_bin returns correct structure", {
   # Create mock SCUBA object
   mock_obj <- create_mock_scuba()
   
-  result <- .schextra_bin(mock_obj, nbins = 40, dr = "UMAP", use_dims = c(1, 2))
+  result <- .hextant_bin(mock_obj, nbins = 40, dr = "UMAP", use_dims = c(1, 2))
   
   expect_type(result, "list")
   expect_named(result, c("cID", "hexbin.matrix"))
@@ -120,9 +119,9 @@ test_that(".schextra_bin returns correct structure", {
 - Line length: Keep under 80-100 characters when reasonable
 
 ### Naming Conventions
-- **Functions**: `snake_case` - `plot_schextra_density()`
+- **Functions**: `snake_case` - `plot_hextant_density()`
 - **Variables**: `snake_case` - `dimension_reduction`, `use_dims`
-- **Internal functions**: Prefix with `.` - `.schextra_bin()`
+- **Internal functions**: Prefix with `.` - `.hextant_bin()`
 - **Constants**: `UPPER_SNAKE_CASE` if needed
 - **Arguments**: `snake_case` matching tidyverse style
 
@@ -300,13 +299,13 @@ res <- list(
 Use `SCUBA::fetch_metadata()` to access metadata and split plots by categorical variables:
 ```r
 # Basic split by cell type
-plot_schextra_density(obj, split_by = "cell_type")
+plot_hextant_density(obj, split_by = "cell_type")
 
 # Control layout with ncol parameter
-plot_schextra_density(obj, split_by = "treatment", ncol = 2)
+plot_hextant_density(obj, split_by = "treatment", ncol = 2)
 
 # Use free scales for better per-facet contrast
-plot_schextra_density(obj, split_by = "sample", scales = "free_y")
+plot_hextant_density(obj, split_by = "sample", scales = "free_y")
 ```
 
 **Implementation pattern for metadata integration:**
@@ -331,14 +330,14 @@ When using `split_by`, you can choose between shared or independent color scales
 **Shared scale (default):**
 ```r
 # All facets use the same color scale (absolute cell counts)
-plot_schextra_density(obj, split_by = "cell_type")
+plot_hextant_density(obj, split_by = "cell_type")
 ```
 In this mode, colors represent absolute cell counts. If one group has 1000 cells and another has 100, the smaller group will appear mostly dark/low on the scale.
 
 **Independent scales:**
 ```r
 # Each facet has its own 0-1 rescaled color scale (relative density)
-plot_schextra_density(obj, split_by = "cell_type", scale_density = TRUE)
+plot_hextant_density(obj, split_by = "cell_type", scale_density = TRUE)
 ```
 In this mode, each facet's density values are rescaled to 0-1 independently. Both groups use the full color range, making within-group patterns easier to see.
 
@@ -357,7 +356,7 @@ In this mode, each facet's density values are rescaled to 0-1 independently. Bot
 **Combining with position scales:**
 ```r
 # Both independent density (color) and free y-axis (position) scales
-plot_schextra_density(obj, split_by = "treatment", 
+plot_hextant_density(obj, split_by = "treatment", 
                       scale_density = TRUE, scales = "free_y", ncol = 2)
 ```
 
@@ -399,14 +398,14 @@ feature_vector <- as.numeric(expr_data[, 1])  # If only one feature requested
 **Basic feature plotting:**
 ```r
 # Plot mean expression in hexbins
-plot_schextra_feature(obj, feature = "CD8A")
+plot_hextant_feature(obj, feature = "CD8A")
 
 # Use different aggregation methods
-plot_schextra_feature(obj, feature = "CD8A", action = "median")
-plot_schextra_feature(obj, feature = "CD8A", action = "sum")
+plot_hextant_feature(obj, feature = "CD8A", action = "median")
+plot_hextant_feature(obj, feature = "CD8A", action = "sum")
 
 # Split by metadata
-plot_schextra_feature(obj, feature = "CD8A", split_by = "cell_type")
+plot_hextant_feature(obj, feature = "CD8A", split_by = "cell_type")
 ```
 
 **Implementation pattern for feature aggregation:**
@@ -427,7 +426,7 @@ plot_schextra_feature(obj, feature = "CD8A", split_by = "cell_type")
 - Example:
   ```r
   # Each facet shows expression for that group only
-  plot_schextra_feature(obj, feature = "CD8A", split_by = "cell_type", 
+  plot_hextant_feature(obj, feature = "CD8A", split_by = "cell_type", 
                         ncol = 2, scales = "free")
   ```
 
@@ -482,11 +481,11 @@ if (missing(dimension_reduction)) {
 ## File Organization
 
 ```
-schextra/
+hextant/
 ├── R/                          # All R source code
-│   ├── plot_schextra_density.R   # Density plotting function
-│   ├── plot_schextra_feature.R   # Feature expression plotting function
-│   └── schextra_utils.R          # Internal utility functions
+│   ├── plot_hextant_density.R   # Density plotting function
+│   ├── plot_hextant_feature.R   # Feature expression plotting function
+│   └── hextant_utils.R          # Internal utility functions
 ├── man/                        # Generated documentation (don't edit)
 ├── tests/
 │   └── testthat/              # Test files (test-*.R)
@@ -497,8 +496,8 @@ schextra/
 
 ### File Naming
 - One main exported function per file, or group related utilities
-- Match file names to primary function: `plot_schextra_density.R`
-- Internal utilities can be grouped: `schextra_utils.R`
+- Match file names to primary function: `plot_hextant_density.R`
+- Internal utilities can be grouped: `hextant_utils.R`
 
 ---
 

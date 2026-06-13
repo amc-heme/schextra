@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(schextra)
+library(hextant)
 
-test_check("schextra")
+test_check("hextant")

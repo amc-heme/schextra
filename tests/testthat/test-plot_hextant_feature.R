@@ -1,4 +1,4 @@
-# Tests for plot_schextra_feature(), focused on the metadata fallback fix
+# Tests for plot_hextant_feature(), focused on the metadata fallback fix
 # (numeric metadata variables such as nCount_RNA) while preserving the
 # BPCells direct-matrix fast path.
 #
@@ -63,7 +63,7 @@ load_aml_bpcells <- function() {
 test_that("case 1: plots a gene from the default assay (unkeyed name)", {
     obj <- load_aml_seurat()
 
-    p <- plot_schextra_feature(
+    p <- plot_hextant_feature(
         obj,
         feature = "ACTG1",
         dimension_reduction = "umap"
@@ -80,7 +80,7 @@ test_that("case 2: plots a keyed feature from a non-default assay", {
     obj <- load_aml_seurat()
 
     # "ab_CD10-AB" is the keyed name (AB assay key "ab_" + feature "CD10-AB").
-    p <- plot_schextra_feature(
+    p <- plot_hextant_feature(
         obj,
         feature = "ab_CD10-AB",
         assay = "AB",
@@ -98,7 +98,7 @@ test_that("case 3: plots a numeric metadata variable (nCount_RNA)", {
 
     # Previously failing case: fetch_feature cannot resolve metadata names.
     expect_no_error(
-        p <- plot_schextra_feature(
+        p <- plot_hextant_feature(
             obj,
             feature = "nCount_RNA",
             dimension_reduction = "umap"
@@ -115,7 +115,7 @@ test_that("case 4: numeric metadata variable works with split_by", {
     obj <- load_aml_seurat()
 
     expect_no_error(
-        p <- plot_schextra_feature(
+        p <- plot_hextant_feature(
             obj,
             feature = "nCount_RNA",
             split_by = "condensed_cell_type",
@@ -141,7 +141,7 @@ test_that("case 5: BPCells gene uses the direct-matrix path; metadata works", {
 
     msgs <- character(0)
     withCallingHandlers(
-        p <- plot_schextra_feature(
+        p <- plot_hextant_feature(
             obj,
             feature = "ACTG1",
             assay = "RNA",
@@ -168,7 +168,7 @@ test_that("case 5: BPCells gene uses the direct-matrix path; metadata works", {
 
     # Metadata fallback must also work on the BPCells-backed object.
     expect_no_error(
-        p_meta <- plot_schextra_feature(
+        p_meta <- plot_hextant_feature(
             obj,
             feature = "nCount_RNA",
             dimension_reduction = "umap"
@@ -183,7 +183,7 @@ test_that("case 6: a nonexistent name errors with the existing message", {
     obj <- load_aml_seurat()
 
     expect_error(
-        plot_schextra_feature(
+        plot_hextant_feature(
             obj,
             feature = "NOT_A_REAL_FEATURE_XYZ",
             dimension_reduction = "umap"
@@ -220,7 +220,7 @@ max_bin_value <- function(p) {
 test_that("collision: assay supplied returns the GENE (assay-only)", {
     obj <- make_collision_obj()
 
-    p <- plot_schextra_feature(
+    p <- plot_hextant_feature(
         obj,
         feature = "ACTG1",
         assay = "RNA",
@@ -239,7 +239,7 @@ test_that("collision: no assay returns METADATA (metadata-first default)", {
     # default assay, telling the user to use the key for the gene. That
     # warning is expected here (we are deliberately resolving the metadata).
     suppressWarnings(
-        p <- plot_schextra_feature(
+        p <- plot_hextant_feature(
             obj,
             feature = "ACTG1",
             dimension_reduction = "umap"
@@ -255,12 +255,12 @@ test_that("collision: no assay returns METADATA (metadata-first default)", {
 test_that("collision: keyed name returns the GENE with or without assay", {
     obj <- make_collision_obj()
 
-    p_no_assay <- plot_schextra_feature(
+    p_no_assay <- plot_hextant_feature(
         obj,
         feature = "rna_ACTG1",
         dimension_reduction = "umap"
     )
-    p_assay <- plot_schextra_feature(
+    p_assay <- plot_hextant_feature(
         obj,
         feature = "rna_ACTG1",
         assay = "RNA",
@@ -280,7 +280,7 @@ test_that("collision: assay supplied + metadata-only name errors (strict)", {
     # search is restricted to the assay and must error rather than resolve
     # from metadata.
     expect_error(
-        plot_schextra_feature(
+        plot_hextant_feature(
             obj,
             feature = "nCount_RNA",
             assay = "RNA",
