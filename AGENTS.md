@@ -85,7 +85,7 @@ tests/
 devtools::test()
 
 # Run a single test file
-testthat::test_file("tests/testthat/test-plot_hextant_density.R")
+testthat::test_file("tests/testthat/test-plot_hextant_feature.R")
 
 # Run tests matching a pattern
 devtools::test(filter = "density")
