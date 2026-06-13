@@ -3,7 +3,7 @@
 #' Visualizes gene/feature expression across hexagonal bins of dimension
 #' reduction space. Expression values are aggregated within each bin using
 #' the specified method (mean, median, or sum). On-the-fly binning is
-#' performed using the schextra approach, with expression data accessed
+#' performed using the hextant approach, with expression data accessed
 #' via SCUBA's fetch_feature() function.
 #'
 #' @param obj A SCUBA-supported single-cell object.
@@ -60,41 +60,41 @@
 #' @examples
 #' \dontrun{
 #' # Basic feature plot with mean aggregation
-#' plot_schextra_feature(seurat_obj, feature = "CD8A")
+#' plot_hextant_feature(seurat_obj, feature = "CD8A")
 #'
 #' # Use median aggregation
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", action = "median")
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", action = "median")
 #'
 #' # Plot on PCA instead of UMAP
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", 
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", 
 #'                       dimension_reduction = "PCA")
 #'
 #' # Use raw counts instead of normalized data
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", layer = "counts")
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", layer = "counts")
 #'
 #' # Split by cell type
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", split_by = "cell_type")
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", split_by = "cell_type")
 #'
 #' # Custom layout and scales
-#' plot_schextra_feature(seurat_obj, feature = "CD8A",
+#' plot_hextant_feature(seurat_obj, feature = "CD8A",
 #'                       split_by = "treatment", ncol = 2, scales = "free_y")
 #'
 #' # Cap maximum expression at 95th percentile
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", max_cutoff = "q95")
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", max_cutoff = "q95")
 #'
 #' # Cap maximum at fixed value of 3
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", max_cutoff = 3)
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", max_cutoff = 3)
 #'
 #' # Apply both min and max cutoffs
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", 
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", 
 #'                       min_cutoff = "q10", max_cutoff = "q90")
 #'
 #' # Cutoffs work with split_by (applied globally)
-#' plot_schextra_feature(seurat_obj, feature = "CD8A", 
+#' plot_hextant_feature(seurat_obj, feature = "CD8A", 
 #'                       split_by = "cell_type", max_cutoff = "q95")
 #' }
 
-plot_schextra_feature <- function(
+plot_hextant_feature <- function(
     obj,
     feature,
     assay = NULL,
@@ -269,7 +269,7 @@ plot_schextra_feature <- function(
     }
     
     # Create hexagonal bins
-    out <- .schextra_bin(obj, nbins, dimension_reduction, use_dims)
+    out <- .hextant_bin(obj, nbins, dimension_reduction, use_dims)
     
     # Validate that feature_values length matches number of cells in binning
     if (length(feature_values) != length(out$cID)) {

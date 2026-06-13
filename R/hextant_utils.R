@@ -1,6 +1,6 @@
 #' Bivariate binning of single cell data into hexagon cells.
 #'
-#' \code{.schextra_bin} returns an schex-style binning list.
+#' \code{.hextant_bin} returns an schex-style binning list.
 #'
 #' @param obj A SCUBA-supported single-cell object.
 #' @param nbins The number of bins partitioning the range of the first
@@ -20,7 +20,7 @@
 #' @importFrom hexbin hexbin hcell2xy
 #' @import SCUBA
 
-.schextra_bin <- function(obj, nbins, dr, use_dims) {
+.hextant_bin <- function(obj, nbins, dr, use_dims) {
   
     dr <- fetch_reduction(obj, reduction = dr, dims = use_dims)
 

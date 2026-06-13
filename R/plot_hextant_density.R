@@ -42,26 +42,26 @@
 #' @examples
 #' \dontrun{
 #' # Basic density plot
-#' plot_schextra_density(seurat_obj, nbins = 80)
+#' plot_hextant_density(seurat_obj, nbins = 80)
 #'
 #' # Split by cell type with automatic layout
-#' plot_schextra_density(seurat_obj, nbins = 80, split_by = "cell_type")
+#' plot_hextant_density(seurat_obj, nbins = 80, split_by = "cell_type")
 #'
 #' # Control layout with 2 columns
-#' plot_schextra_density(seurat_obj, split_by = "treatment", ncol = 2)
+#' plot_hextant_density(seurat_obj, split_by = "treatment", ncol = 2)
 #'
 #' # Free y-axis scales for better contrast per group
-#' plot_schextra_density(seurat_obj, split_by = "sample", scales = "free_y")
+#' plot_hextant_density(seurat_obj, split_by = "sample", scales = "free_y")
 #'
 #' # Use independent color scales per facet for better contrast
-#' plot_schextra_density(seurat_obj, split_by = "cell_type", scale_density = TRUE)
+#' plot_hextant_density(seurat_obj, split_by = "cell_type", scale_density = TRUE)
 #'
 #' # Combine independent density scaling with free position scales
-#' plot_schextra_density(seurat_obj, split_by = "treatment", 
+#' plot_hextant_density(seurat_obj, split_by = "treatment", 
 #'                       scale_density = TRUE, scales = "free_y", ncol = 2)
 #' }
 #' 
-plot_schextra_density <- function(
+plot_hextant_density <- function(
     obj,
     nbins = 80,
     dimension_reduction = "UMAP",
@@ -114,7 +114,7 @@ plot_schextra_density <- function(
         warning("scale_density = TRUE has no effect when split_by is NULL. Density scaling only applies to faceted plots.")
     }
   
-    out <- .schextra_bin(obj, nbins, dimension_reduction, use_dims)
+    out <- .hextant_bin(obj, nbins, dimension_reduction, use_dims)
 
     # Get proper dimension names from SCUBA
     dim_names <- reduction_dimnames(
