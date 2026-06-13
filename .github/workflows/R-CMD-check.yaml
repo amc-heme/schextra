@@ -41,16 +41,42 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
+          # BPCells is not available on CRAN; it is published on R-universe.
+          # Declaring the repo here lets pak resolve `any::BPCells` from a
+          # proper package repository instead of a raw GitHub source tarball.
+          extra-repositories: "https://bnprks.r-universe.dev"
+
+      # BPCells links against HDF5 and must compile from source, so the HDF5
+      # system library is installed per-OS before resolving R dependencies.
+      - name: Install HDF5 (macOS)
+        if: runner.os == 'macOS'
+        run: brew install hdf5
+
+      - name: Install HDF5 (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev
+
+      - name: Install HDF5 (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          vcpkg install hdf5:x64-windows
+          echo "HDF5_ROOT=C:\vcpkg\installed\x64-windows" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "HDF5_INCLUDE_DIR=C:\vcpkg\installed\x64-windows\include" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "HDF5_LIBRARY_DIR=C:\vcpkg\installed\x64-windows\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           # SCUBA is resolved from the DESCRIPTION Remotes field. BPCells is
-          # not on CRAN and is installed explicitly from GitHub (it requires
-          # C++ compilation) so the BPCells-backed tests can run.
-          extra-packages: any::rcmdcheck, bnprks/BPCells/r
+          # resolved from R-universe (declared via extra-repositories above)
+          # so the BPCells-backed tests can run.
+          extra-packages: any::rcmdcheck, any::BPCells
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+          error-on: '"error"'
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
