@@ -75,8 +75,7 @@ Test files must be named `test-*.R` in `tests/testthat/`:
 tests/
 ├── testthat.R
 └── testthat/
-    ├── test-plot_hextant_density.R
-    └── test-hextant_utils.R
+    └── test-plot_hextant_feature.R
 ```
 
 ### Running Tests
